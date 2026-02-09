@@ -1,71 +1,52 @@
-import argparse
+# scripts/evaluate_newssumm.py
+
 import json
-import os
+import argparse
 import pandas as pd
 import evaluate
-from tqdm import tqdm
-
 
 rouge = evaluate.load("rouge")
 
+def evaluate_predictions(pred_path):
+    with open(pred_path) as f:
+        data = json.load(f)
 
-def compute_rouge(preds, refs):
-    scores = rouge.compute(
-        predictions=preds,
-        references=refs
-    )
-    return scores["rouge1"], scores["rouge2"], scores["rougeL"]
+    preds = [x["prediction"] for x in data]
+    refs = [x["reference"] for x in data]
 
+    scores = rouge.compute(predictions=preds, references=refs)
 
-def main(args):
-    rows = []
+    return {
+        "ROUGE-1": scores["rouge1"],
+        "ROUGE-2": scores["rouge2"],
+        "ROUGE-L": scores["rougeL"]
+    }
 
-    for file in os.listdir(args.predictions_dir):
-        if not file.endswith(".json"):
-            continue
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_name", required=True)
+    parser.add_argument("--predictions", required=True)
+    parser.add_argument("--csv_path", default="results/newssumm_benchmark_scores.csv")
+    args = parser.parse_args()
 
-        model_name = file.replace(".json", "")
-        path = os.path.join(args.predictions_dir, file)
+    scores = evaluate_predictions(args.predictions)
 
-        with open(path) as f:
-            data = json.load(f)
+    row = {
+        "Model": args.model_name,
+        "ROUGE-1": scores["ROUGE-1"],
+        "ROUGE-2": scores["ROUGE-2"],
+        "ROUGE-L": scores["ROUGE-L"]
+    }
 
-        preds = [d["generated_summary"] for d in data]
-        refs = [d["reference_summary"] for d in data]
+    if os.path.exists(args.csv_path):
+        df = pd.read_csv(args.csv_path)
+        df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
+    else:
+        df = pd.DataFrame([row])
 
-        r1, r2, rl = compute_rouge(preds, refs)
-
-        rows.append({
-            "model_name": model_name,
-            "ROUGE-1": r1,
-            "ROUGE-2": r2,
-            "ROUGE-L": rl,
-            "BERTScore": "NA"
-        })
-
-    df = pd.DataFrame(rows)
-    df.to_csv(args.output_csv, index=False)
-    print(f"Saved evaluation results to {args.output_csv}")
-
+    df.to_csv(args.csv_path, index=False)
+    print("✅ Updated benchmark table saved to:", args.csv_path)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("--predictions_dir", required=True)
-    parser.add_argument("--output_csv", required=True)
-
-    main(parser.parse_args())
-
-
-
-# From repo root:
-
-# python scripts/evaluate_newssumm.py \
-#   --predictions_dir results/predictions \
-#   --output_csv results/newssumm_baselines_scores.csv
-
-# Optional (only if GPU/CPU allows):
-# python scripts/evaluate_newssumm.py \
-#   --predictions_dir results/predictions \
-#   --output_csv results/newssumm_baselines_scores.csv \
-#   --compute_bertscore
+    import os
+    main()

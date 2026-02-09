@@ -1,0 +1,7 @@
+model_name: HGP-Lite-LongT5
+base_model: google/long-t5-tglobal-base
+max_input_tokens: 2048
+max_output_tokens: 200
+top_k_sentences: 30
+training_type: inference-only
+hardware: Colab T4

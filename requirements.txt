@@ -1,0 +1,29 @@
+# requirements.txt
+# Core deep learning & NLP
+transformers>=4.38.0
+datasets>=2.18.0
+torch>=2.0.0
+accelerate>=0.26.0
+evaluate>=0.4.1
+
+# Long-context & summarization evaluation
+rouge-score>=0.1.2
+
+# Optional metric (not used in final results, kept for extensibility)
+bert-score>=0.3.13
+
+# Parameter-efficient fine-tuning (for instruction-tuned LLMs, if needed)
+peft>=0.9.0
+bitsandbytes>=0.42.0
+
+# Data handling & utilities
+numpy>=1.24.0
+pandas>=2.0.0
+tqdm>=4.66.0
+pyyaml>=6.0.1
+
+# Tokenization & text processing
+sentencepiece>=0.1.99
+
+# Reproducibility
+scikit-learn>=1.3.0

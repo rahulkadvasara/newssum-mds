@@ -1,40 +1,44 @@
 # NewsSumm-MDS
 
-Multi-Document Abstractive Summarization on the NewsSumm dataset using long-context transformers and large language models.
+Multi-Document Abstractive Summarization on the **NewsSumm** dataset using long-context encoder–decoder transformers, instruction-tuned large language models, and a lightweight hierarchical planning extension.
+
+This repository supports a **benchmarking and model-design study** with an emphasis on reproducibility under limited computational resources.
 
 ---
 
 ## Repository Structure
 
-data/
-- raw/
-- processed/
+    data/
+    ├── raw/
+    ├── processed/
+    ├── newssumm_test_subset_1000.csv
+    ├── newssumm_test_subset_100.csv
+    └── README.md
 
-models/
-- baseline_longt5.py
-- baseline_led.py
-- baseline_primerA.py
-- baseline_flan_t5.py
-- newssumm_dataset.py
-- novel_hgp_model.py
+    models/
+    ├── baseline_longt5.py
+    ├── baseline_led.py
+    ├── baseline_primerA.py
+    ├── baseline_flan_t5.py
+    ├── novel_hgp_model.py
+    └── newssumm_dataset.py
 
-scripts/
-- preprocess_newssumm.py
-- train_primeraled_longt5.py
-- train_llm_lora.py
-- generate_predictions.py
-- evaluate_newssumm.py
+    scripts/
+    ├── preprocess_newssumm.py
+    ├── generate_predictions.py
+    └── evaluate_newssumm.py
 
-configs/
-- experiment_configs.yaml
+    configs/
+    └── experiment_configs.yaml
 
-results/
-- predictions/
-- newssumm_benchmark_scores.csv
+    results/
+    ├── predictions/
+    ├── newssumm_benchmark_scores.csv
+    └── README.md
 
-docs/
-- data_pipeline.md
-- novel_model_spec.md
+    docs/
+    ├── data_pipeline.md
+    └── novel_model_spec.md
 
 ---
 
@@ -42,82 +46,110 @@ docs/
 
 Install dependencies:
 
-pip install transformers datasets evaluate peft bitsandbytes accelerate rouge-score bert-score
+    pip install transformers datasets evaluate accelerate rouge-score peft bitsandbytes
 
 ---
 
 ## Dataset
 
-Download the NewsSumm dataset from Zenodo and place files in:
+The NewsSumm dataset is obtained from the official Zenodo release.
 
-data/raw/
+Raw files (optional, for preprocessing experiments):
 
-Preprocess the dataset:
+    data/raw/
 
-python scripts/preprocess_newssumm.py --input_dir data/raw --output_dir data/processed
+For benchmarking, fixed subsets derived from the **official test split** are used:
 
----
+- `newssumm_test_subset_1000.csv`  
+  Used for long-context encoder–decoder models and the proposed model
+- `newssumm_test_subset_100.csv`  
+  Used for instruction-tuned decoder-only LLMs due to GPU memory constraints
 
-## Training Baselines
+Dataset preprocessing and structure are documented in:
 
-### Encoder–Decoder Models (PRIMERA, LED, LongT5)
-
-python scripts/train_primeraled_longt5.py \
-  --model_name google/long-t5-tglobal-base \
-  --train_csv data/processed/train.csv \
-  --val_csv data/processed/dev.csv \
-  --output_dir models/longt5
+    docs/data_pipeline.md
 
 ---
 
-### Instruction-Tuned LLMs (LoRA)
+## Models Evaluated
 
-python scripts/train_llm_lora.py \
-  --base_model mistralai/Mistral-7B-Instruct-v0.3 \
-  --train_csv data/processed/train.csv \
-  --output_dir models/mistral_lora
+### Long-context encoder–decoder models
+- LongT5-base
+- LED-base
+- PRIMERA
+- Flan-T5-XL
+
+### Instruction-tuned decoder-only LLMs (prompt-based)
+- Qwen2-7B-Instruct
+- LLaMA-3-8B-Instruct
+
+### Proposed model
+- **HGP-Lite-LongT5**  
+  A lightweight hierarchical planner-enhanced variant built on LongT5-base
 
 ---
 
 ## Generating Predictions
 
-python scripts/generate_predictions.py \
-  --model_type longt5 \
-  --test_csv data/processed/test.csv \
-  --output_path results/predictions/longt5.json
+Run inference for a model:
+
+    python scripts/generate_predictions.py \
+      --model_name longt5 \
+      --test_csv data/newssumm_test_subset_1000.csv \
+      --output_dir results/predictions/longt5
+
+Instruction-tuned LLMs use the 100-cluster subset and prompt-based generation.
 
 ---
 
 ## Evaluation
 
-python scripts/evaluate_newssumm.py \
-  --predictions_dir results/predictions \
-  --output_csv results/newssumm_benchmark_scores.csv
+Evaluate all predictions using ROUGE:
 
-Metrics:
-- ROUGE-1
-- ROUGE-2
-- ROUGE-L
-- BERTScore (optional)
+    python scripts/evaluate_newssumm.py \
+      --predictions_dir results/predictions \
+      --output_csv results/newssumm_benchmark_scores.csv
+
+Reported metrics:
+- ROUGE-1 (F1)
+- ROUGE-2 (F1)
+- ROUGE-L (F1)
+
+BERTScore is excluded from final reporting due to computational overhead.
 
 ---
 
 ## Proposed Model
 
-A Hierarchical Graph-Planner (HGP) model is proposed for cross-document aggregation and planning-based decoding.
+The **HGP-Lite-LongT5** model introduces a lightweight hierarchical planning step prior to decoding to improve cross-document coherence and reduce redundancy without heavy graph modeling.
 
-See:
-docs/novel_model_spec.md
+Model details and design rationale are documented in:
+
+    docs/novel_model_spec.md
+
+---
+
+## Results
+
+Final benchmark scores and generated summaries are stored in:
+
+    results/
+
+Details are documented in:
+
+    results/README.md
 
 ---
 
 ## Reproducibility
 
-Each experiment logs:
-- Model configuration
-- Random seed
-- Hardware used
-- Runtime
+- All experiments use fixed dataset subsets
+- Identical preprocessing and evaluation pipelines are applied across models
+- Configuration files specify model settings and seeds
+- Results can be regenerated by re-running inference and evaluation scripts
+
+This repository is designed so that future users can reproduce at least one baseline
+and the proposed model with comparable results.
 
 ---
 
@@ -131,10 +163,5 @@ Suvidha Foundation (Suvidha Mahila Mandal)
 
 ## License
 
-For academic and research use only. Dataset usage follows the NewsSumm Zenodo license.
-
-## Reproducibility
-All experiments are fully reproducible. Configuration files in `configs/` specify
-random seeds, hyperparameters, and hardware details. Any future intern can re-run
-at least one baseline model and the proposed HGP model using the provided scripts
-and recover comparable results.
+For academic and research use only.  
+Dataset usage follows the NewsSumm Zenodo license.
