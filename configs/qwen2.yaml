@@ -1,0 +1,4 @@
+model: qwen2
+subset: 1000
+gpu: T4
+batch_size: 1

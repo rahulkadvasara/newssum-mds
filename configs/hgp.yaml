@@ -1,0 +1,20 @@
+model: Hierarchical Graph-Planner (HGP)
+base_model: google/long-t5-tglobal-base
+
+training:
+  batch_size: 1
+  epochs: 2
+  learning_rate: 2e-5
+  max_input_len: 4096
+  max_output_len: 256
+
+seed: 42
+
+hardware:
+  platform: Google Colab
+  gpu: NVIDIA T4
+  memory: 16GB
+
+notes:
+  - Salience planner enabled
+  - Graph aggregation simplified

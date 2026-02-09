@@ -1,0 +1,10 @@
+base_model: mistralai/Mistral-7B-Instruct-v0.3
+lora_r: 8
+lora_alpha: 16
+max_input_len: 4096
+max_output_len: 256
+batch_size: 1
+learning_rate: 2e-4
+epochs: 2
+seed: 42
+hardware: Colab T4

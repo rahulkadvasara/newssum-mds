@@ -1,0 +1,4 @@
+model: led
+subset: 1000
+gpu: T4
+batch_size: 1

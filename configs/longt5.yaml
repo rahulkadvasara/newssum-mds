@@ -1,0 +1,8 @@
+model_name: google/long-t5-tglobal-base
+max_input_len: 4096
+max_output_len: 256
+batch_size: 1
+learning_rate: 3e-5
+epochs: 2
+seed: 42
+hardware: Colab T4

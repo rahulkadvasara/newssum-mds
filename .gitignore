@@ -1,0 +1,9 @@
+__pycache__/
+.ipynb_checkpoints/
+.env
+*.pt
+*.bin
+*.ckpt
+data/raw/*
+!models/README.md
+data/NewsSumm Dataset.xlsx
